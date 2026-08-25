@@ -14,7 +14,7 @@ local ViewportSize = workspace.CurrentCamera.ViewportSize
 local Mouse = game.Players.LocalPlayer:GetMouse()
 local Utilities = {}
 
---// Compatibility //--
+--// Compatibility --//
 local request = syn and syn.request or http and http.request or http_request or request or httprequest
 local getcustomasset = getcustomasset or getsynasset
 local isfolder = isfolder or syn_isfolder or is_folder
@@ -23,7 +23,7 @@ local makefolder = makefolder or make_folder or createfolder or create_folder
 
 local DropIndex = 9999
 
---// Themes //--
+--// Themes --//
 local Themes = {
     Purple = {
         Primary = Color3.fromRGB(30, 25, 35),
@@ -110,7 +110,7 @@ local Themes = {
 local CurrentTheme = "Purple"
 local Colors = Themes[CurrentTheme]
 local ThemeButtons = {}
-local AllUIElements = {} -- Store all UI elements for theme updates
+local AllUIElements = {}
 --//
 
 function library:SetTheme(themeName)
@@ -198,11 +198,15 @@ function Utilities:Create(Inst, Properties, Childs)
     end
     
     for prop, v in pairs(Properties) do
-        Instance[prop] = v
+        pcall(function()
+            Instance[prop] = v
+        end)
     end
     
     for _, child in pairs(Childs) do
-        child.Parent = Instance
+        pcall(function()
+            child.Parent = Instance
+        end)
     end
     
     -- Store UI elements for theme updates
