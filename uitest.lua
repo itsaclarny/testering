@@ -549,13 +549,7 @@ local library = {
     })
   end
 
-    local success, err = pcall(function()
-    if syn and syn.protect_gui then
-      syn.protect_gui(Window)
-    end
-  end)
-  
-  if gethui then
+     if gethui then
     Window.Parent = gethui()
   elseif syn then
     Window.Parent = CoreGui
