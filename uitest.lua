@@ -1,4 +1,3 @@
--- Fixed Library
 local library = {
     flags = {}
 }
@@ -198,14 +197,23 @@ function Utilities:Create(Inst, Properties, Childs)
     end
     
     for prop, v in pairs(Properties) do
-        pcall(function()
-            Instance[prop] = v
-        end)
+        if prop ~= "Parent" then
+            pcall(function()
+                Instance[prop] = v
+            end)
+        end
     end
     
     for _, child in pairs(Childs) do
         pcall(function()
             child.Parent = Instance
+        end)
+    end
+    
+    -- Устанавливаем Parent в конце
+    if Properties.Parent then
+        pcall(function()
+            Instance.Parent = Properties.Parent
         end)
     end
     
@@ -215,7 +223,7 @@ function Utilities:Create(Inst, Properties, Childs)
             Type = Inst,
             Object = Instance,
             Name = Properties.Name,
-            ParentName = Properties.Parent and Properties.Parent.Name or nil
+            ParentName = nil
         })
     end
     
