@@ -1,3 +1,4 @@
+-- Fixed Library
 local library = {
     flags = {}
 }
@@ -13,7 +14,7 @@ local ViewportSize = workspace.CurrentCamera.ViewportSize
 local Mouse = game.Players.LocalPlayer:GetMouse()
 local Utilities = {}
 
---// Compatibility --//
+--// Compatibility //--
 local request = syn and syn.request or http and http.request or http_request or request or httprequest
 local getcustomasset = getcustomasset or getsynasset
 local isfolder = isfolder or syn_isfolder or is_folder
@@ -22,7 +23,7 @@ local makefolder = makefolder or make_folder or createfolder or create_folder
 
 local DropIndex = 9999
 
---// Themes --//
+--// Themes //--
 local Themes = {
     Purple = {
         Primary = Color3.fromRGB(30, 25, 35),
@@ -109,7 +110,6 @@ local Themes = {
 local CurrentTheme = "Purple"
 local Colors = Themes[CurrentTheme]
 local ThemeButtons = {}
-local AllUIElements = {}
 --//
 
 function library:SetTheme(themeName)
@@ -137,44 +137,62 @@ function library:SetTheme(themeName)
                 ColorSequenceKeypoint.new(1, Colors.WindowGradient2),
             })
             
-            -- Update all stored UI elements
-            for _, element in pairs(AllUIElements) do
-                pcall(function()
-                    if element.Type == "Frame" then
-                        if element.Name == "Divider" then
-                            element.Object.BackgroundColor3 = Colors.Divider
-                        elseif element.Name == "Bottom" or element.Name == "Topbar" or element.Name == "ConsoleTopbar" then
-                            element.Object.BackgroundColor3 = Colors.Secondary
-                        elseif element.Name == "ThemeContainer" or element.Name == "Console" then
-                            element.Object.BackgroundColor3 = Colors.Primary
-                        elseif element.Name == "CheckInner" or element.Name == "SliderOuter" or element.Name == "CheckFrame" or element.Name == "ButtonFrame" or element.Name == "DropdownFrame" then
-                            element.Object.BackgroundColor3 = Colors.Secondary
-                        elseif element.Name == "SliderInner" then
-                            element.Object.BackgroundColor3 = Colors.DarkerAccent
-                        elseif element.Name == "DropdownImageContainer" then
-                            element.Object.BackgroundColor3 = Colors.Tertiary
+            Window.Main.Bottom.BackgroundColor3 = Colors.Secondary
+            Window.Main.Bottom.Divider.BackgroundColor3 = Colors.Divider
+            Window.Main.Topbar.BackgroundColor3 = Colors.Secondary
+            Window.Main.Topbar.Divider.BackgroundColor3 = Colors.Divider
+            Window.Main.Bottom.BottomText.TextColor3 = Colors.PrimaryText
+            
+            local Console = Window.Main:FindFirstChild("Console")
+            if Console then
+                Console.BackgroundColor3 = Colors.Primary
+                Console.ConsoleTopbar.BackgroundColor3 = Colors.Secondary
+                Console.ConsoleTopbar.ConsoleText.TextColor3 = Colors.PrimaryText
+            end
+            
+            local ThemeContainer = Window:FindFirstChild("ThemeContainer")
+            if ThemeContainer then
+                ThemeContainer.BackgroundColor3 = Colors.Primary
+                ThemeContainer.UIStroke.Color = Colors.Divider
+                ThemeContainer.ThemeLabel.TextColor3 = Colors.SecondaryText
+            end
+            
+            -- Update all UI elements recursively
+            local function UpdateColors(obj)
+                for _, child in pairs(obj:GetChildren()) do
+                    if child:IsA("Frame") then
+                        if child.Name == "Divider" then
+                            child.BackgroundColor3 = Colors.Divider
+                        elseif child.Name == "CheckInner" then
+                            -- Checkbox inner (keep state-based color)
+                        elseif child.Name == "SliderInner" then
+                            child.BackgroundColor3 = Colors.DarkerAccent
+                        elseif child.Name == "SliderOuter" or child.Name == "CheckFrame" or child.Name == "ButtonFrame" or child.Name == "DropdownFrame" then
+                            child.BackgroundColor3 = Colors.Secondary
+                            if child:FindFirstChild("UIStroke") then
+                                child.UIStroke.Color = Colors.AccentDivider
+                            end
+                        elseif child.Name == "DropdownElement" then
+                            child.BackgroundTransparency = 1
                         end
-                    elseif element.Type == "TextLabel" then
-                        if element.Name == "SectionText" or element.Name == "LabelText" or element.Name == "ButtonText" or element.Name == "CheckText" or element.Name == "SliderText" or element.Name == "DropdownText" or element.Name == "BottomText" or element.Name == "ConsoleText" then
-                            element.Object.TextColor3 = Colors.PrimaryText
-                        elseif element.Name == "TabText" then
-                            element.Object.TextColor3 = Colors.SecondaryText
-                        elseif element.Name == "ThemeLabel" then
-                            element.Object.TextColor3 = Colors.SecondaryText
-                        elseif element.Name == "SliderValueText" then
-                            element.Object.TextColor3 = Color3.fromRGB(255, 255, 255)
-                        elseif element.Name == "DropdownElementText" then
-                            element.Object.TextColor3 = Colors.PrimaryText
+                    elseif child:IsA("TextLabel") then
+                        if child.Name == "SectionText" or child.Name == "LabelText" or child.Name == "ButtonText" or child.Name == "CheckText" or child.Name == "SliderText" or child.Name == "DropdownText" then
+                            child.TextColor3 = Colors.PrimaryText
+                        elseif child.Name == "SliderValueText" then
+                            child.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        elseif child.Name == "DropdownElementText" then
+                            child.TextColor3 = Colors.PrimaryText
                         end
-                    elseif element.Type == "UIStroke" then
-                        if element.ParentName == "ThemeContainer" or element.ParentName == "Console" then
-                            element.Object.Color = Colors.Divider
-                        elseif element.ParentName == "CheckFrame" or element.ParentName == "SliderOuter" or element.ParentName == "ButtonFrame" or element.ParentName == "DropdownFrame" or element.ParentName == "DropdownImageContainer" then
-                            element.Object.Color = Colors.AccentDivider
+                    elseif child:IsA("UIStroke") then
+                        if child.Parent and (child.Parent.Name == "CheckFrame" or child.Parent.Name == "SliderOuter" or child.Parent.Name == "ButtonFrame" or child.Parent.Name == "DropdownFrame") then
+                            child.Color = Colors.AccentDivider
                         end
                     end
-                end)
+                    UpdateColors(child)
+                end
             end
+            
+            UpdateColors(Window.Main)
         end
     end
 end
@@ -197,34 +215,11 @@ function Utilities:Create(Inst, Properties, Childs)
     end
     
     for prop, v in pairs(Properties) do
-        if prop ~= "Parent" then
-            pcall(function()
-                Instance[prop] = v
-            end)
-        end
+        Instance[prop] = v
     end
     
     for _, child in pairs(Childs) do
-        pcall(function()
-            child.Parent = Instance
-        end)
-    end
-    
-    -- Устанавливаем Parent в конце
-    if Properties.Parent then
-        pcall(function()
-            Instance.Parent = Properties.Parent
-        end)
-    end
-    
-    -- Store UI elements for theme updates
-    if Inst == "Frame" or Inst == "TextLabel" or Inst == "UIStroke" then
-        table.insert(AllUIElements, {
-            Type = Inst,
-            Object = Instance,
-            Name = Properties.Name,
-            ParentName = nil
-        })
+        child.Parent = Instance
     end
     
     return Instance
