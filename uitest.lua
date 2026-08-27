@@ -109,26 +109,12 @@ local Themes = {
 
 local CurrentTheme = "Purple"
 local Colors = Themes[CurrentTheme]
-local ThemeButtons = {}
 --//
 
 function library:SetTheme(themeName)
     if Themes[themeName] then
         CurrentTheme = themeName
         Colors = Themes[themeName]
-        
-        -- Update theme buttons
-        for name, btn in pairs(ThemeButtons) do
-            if name == themeName then
-                btn.BackgroundColor3 = Colors.Accent
-                btn.TextColor3 = Colors.AccentText
-                btn.UIStroke.Color = Colors.Accent
-            else
-                btn.BackgroundColor3 = Colors.Secondary
-                btn.TextColor3 = Colors.PrimaryText
-                btn.UIStroke.Color = Colors.Divider
-            end
-        end
         
         if self.Window then
             local Window = self.Window
@@ -152,47 +138,18 @@ function library:SetTheme(themeName)
             
             local ThemeContainer = Window:FindFirstChild("ThemeContainer")
             if ThemeContainer then
-                ThemeContainer.BackgroundColor3 = Colors.Primary
-                ThemeContainer.UIStroke.Color = Colors.Divider
-                ThemeContainer.ThemeLabel.TextColor3 = Colors.SecondaryText
-            end
-            
-            -- Update all UI elements recursively
-            local function UpdateColors(obj)
-                for _, child in pairs(obj:GetChildren()) do
-                    if child:IsA("Frame") then
-                        if child.Name == "Divider" then
-                            child.BackgroundColor3 = Colors.Divider
-                        elseif child.Name == "CheckInner" then
-                            -- Checkbox inner (keep state-based color)
-                        elseif child.Name == "SliderInner" then
-                            child.BackgroundColor3 = Colors.DarkerAccent
-                        elseif child.Name == "SliderOuter" or child.Name == "CheckFrame" or child.Name == "ButtonFrame" or child.Name == "DropdownFrame" then
-                            child.BackgroundColor3 = Colors.Secondary
-                            if child:FindFirstChild("UIStroke") then
-                                child.UIStroke.Color = Colors.AccentDivider
-                            end
-                        elseif child.Name == "DropdownElement" then
-                            child.BackgroundTransparency = 1
-                        end
-                    elseif child:IsA("TextLabel") then
-                        if child.Name == "SectionText" or child.Name == "LabelText" or child.Name == "ButtonText" or child.Name == "CheckText" or child.Name == "SliderText" or child.Name == "DropdownText" then
-                            child.TextColor3 = Colors.PrimaryText
-                        elseif child.Name == "SliderValueText" then
-                            child.TextColor3 = Color3.fromRGB(255, 255, 255)
-                        elseif child.Name == "DropdownElementText" then
-                            child.TextColor3 = Colors.PrimaryText
-                        end
-                    elseif child:IsA("UIStroke") then
-                        if child.Parent and (child.Parent.Name == "CheckFrame" or child.Parent.Name == "SliderOuter" or child.Parent.Name == "ButtonFrame" or child.Parent.Name == "DropdownFrame") then
-                            child.Color = Colors.AccentDivider
+                for _, btn in pairs(ThemeContainer:GetChildren()) do
+                    if btn:IsA("TextButton") then
+                        if btn.Name == themeName then
+                            btn.BackgroundColor3 = Colors.Accent
+                            btn.TextColor3 = Colors.AccentText
+                        else
+                            btn.BackgroundColor3 = Colors.Secondary
+                            btn.TextColor3 = Colors.PrimaryText
                         end
                     end
-                    UpdateColors(child)
                 end
             end
-            
-            UpdateColors(Window.Main)
         end
     end
 end
@@ -442,11 +399,9 @@ function library:Window(WindowArgs)
             Parent = ThemeContainer.ThemeButtons
         }, {
             Utilities:Create("UIStroke", {
-                Color = themeName == CurrentTheme and Colors.Accent or Colors.Divider
+                Color = Colors.Divider
             })
         })
-        
-        ThemeButtons[themeName] = ThemeButton
         
         ThemeButton.MouseEnter:Connect(function()
             if themeName ~= CurrentTheme then
@@ -579,8 +534,9 @@ function library:Window(WindowArgs)
                 ZIndex = 11002
             })
         })
-    end)
+    end
 
+    -- FIXED: Removed syn.protect_gui
     if gethui then
         Window.Parent = gethui()
     else
